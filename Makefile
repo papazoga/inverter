@@ -5,7 +5,7 @@ AVRDUDEUPLOAD=-carduino -P/dev/ttyUSB0 -b57600 -D -pm328p
 MHZ=16
 SINTAB_ENTRIES=32
 CFLAGS=-mmcu=atmega328p -DF_CPU=$(MHZ)000000UL -DN_ENTRIES=$(SINTAB_ENTRIES)
-OBJS=main.o pwm-bipolar.o sintab.o
+OBJS=main.o pwm-unipolar.o sintab.o
 
 all: firmware.elf
 
