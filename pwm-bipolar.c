@@ -18,10 +18,10 @@ void pwm_init()
 {
 	/* Set OC0A/B to output */
 	DDRD |= (1<<5) | (1<<6);
-	
+
 	DDRD |= (1<<7);
 	PORTD &= ~(1<<7);
-	
+
 	/* Set OC1A/B to output */
 	DDRB |= (1<<1) | (1<<2);
 
@@ -51,7 +51,7 @@ void pwm_init()
 	pwm_deadtime = INITIAL_DEADTIME;
 }
 
-void enable_channel(int ch)
+static void enable_channel(int ch)
 {
 	switch (ch) {
 	case 0:
@@ -73,7 +73,7 @@ void enable_channel(int ch)
 	}
 }
 
-void disable_channel(int ch)
+static void disable_channel(int ch)
 {
 	switch (ch) {
 	case 0:
@@ -100,7 +100,7 @@ void pwm_update()
 		PORTD ^= (1<<7);
 		pwm_curchan ^= 1;
 
-		enable_channel(pwm_curchan);	
+		enable_channel(pwm_curchan);
 		disable_channel(pwm_curchan^1);
 	}
 
