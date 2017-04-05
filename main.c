@@ -42,14 +42,13 @@ void main()
 	ADCSRB = 0;
 
 	adc_start_conversion();
-	pwm_amplitude = 200;
+//	pwm_amplitude = 200;
 
 	while (1) {
 		unsigned int val = adc_value[0];
 
 		adc_update();
-
-//		pwm_amplitude = (val - 2*pwm_deadtime) >> 2;
+		pwm_amplitude = (val - 2*pwm_deadtime) >> 2;
 	}
 
 }

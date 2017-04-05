@@ -58,14 +58,14 @@ static void set_channel(int dir)
 		TCCR0A =  (1<<COM0A1)                 /* Clear OC0A on compare match going up, set on match going down */
 			| (1<<COM0B0) | (1<<COM0B1)   /* Set OC0B on compare match going up, clear on match going down */
 			| (1<<WGM00);	              /* Phase-correct PWM 0x00 to 0xff */
-		TCCR0B = 2;
+		TCCR0B = 1;
 		TCNT0 = 0;
 		break;
 	case 1:
 		TCCR0A =  (1<<COM0A0) | (1<<COM0A1)   /* Set OC0A on compare match going up, clear on match going down */
 			| (1<<COM0B1)                 /* Clear OC0B on compare match going up, set on match going down */
 			| (1<<WGM00);	              /* Phase-correct PWM 0x00 to 0xff */
-		TCCR0B = 2;
+		TCCR0B = 1;
 		TCNT0 = 0;
 		break;
 	default:
@@ -80,19 +80,17 @@ void pwm_update()
 	unsigned char val = sample >> 8;
 
 	if (pwm_position == 0) {
-		unsigned char portval = ((~pwm_dir) << 1) | (pwm_dir<<2);
+		unsigned char portval = PORTB & ~PORTMASK;
 		PORTD ^= (1<<7);
 
 		set_channel(pwm_dir);
-		PORTB = (PORTB & ~(PORTMASK)) | portval;
+
+		PORTB = portval | ((pwm_dir^1)<<2) | (pwm_dir<<1);
 		pwm_dir ^= 1;
 	}
 
 	OCR0A = val;
 	OCR0B = val + pwm_deadtime;
-
-	OCR1A = val;
-	OCR1B = val + pwm_deadtime;
 
 out:
 	pwm_position = (pwm_position+1) % N_ENTRIES;
