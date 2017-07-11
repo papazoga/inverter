@@ -10,9 +10,15 @@ static int pwm_position;
 unsigned char pwm_deadtime;
 unsigned char pwm_amplitude;
 
-#define INITIAL_AMPLITUDE 50
+#define INITIAL_AMPLITUDE 20
 #define INITIAL_TICKS     132  /* ((F_CPU / (7680 * N_ENTRIES))-1) */
-#define INITIAL_DEADTIME  2    /* 1us deadtime */
+#define INITIAL_DEADTIME  17    /* In 60ns increments */
+
+#ifdef SLOW_WAVEFORM
+#define TIMER_PRESCALE 3
+#else
+#define TIMER_PRESCALE 1
+#endif
 
 void pwm_init()
 {
@@ -58,14 +64,14 @@ static void set_channel(int dir)
 		TCCR0A =  (1<<COM0A1)                 /* Clear OC0A on compare match going up, set on match going down */
 			| (1<<COM0B0) | (1<<COM0B1)   /* Set OC0B on compare match going up, clear on match going down */
 			| (1<<WGM00);	              /* Phase-correct PWM 0x00 to 0xff */
-		TCCR0B = 1;
+		TCCR0B = TIMER_PRESCALE;
 		TCNT0 = 0;
 		break;
 	case 1:
 		TCCR0A =  (1<<COM0A0) | (1<<COM0A1)   /* Set OC0A on compare match going up, clear on match going down */
 			| (1<<COM0B1)                 /* Clear OC0B on compare match going up, set on match going down */
 			| (1<<WGM00);	              /* Phase-correct PWM 0x00 to 0xff */
-		TCCR0B = 1;
+		TCCR0B = TIMER_PRESCALE;
 		TCNT0 = 0;
 		break;
 	default:
@@ -81,16 +87,26 @@ void pwm_update()
 
 	if (pwm_position == 0) {
 		unsigned char portval = PORTB & ~PORTMASK;
-		PORTD ^= (1<<7);
+		PORTD ^= (pwm_dir<<7);
 
 		set_channel(pwm_dir);
 
 		PORTB = portval | ((pwm_dir^1)<<2) | (pwm_dir<<1);
-		pwm_dir ^= 1;
+		pwm_dir = 1;
 	}
 
-	OCR0A = val;
-	OCR0B = val + pwm_deadtime;
+	if (val) {
+		if (pwm_dir) {
+			OCR0A = val + pwm_deadtime;
+			OCR0B = val;
+		} else {
+			OCR0A = val;
+			OCR0B = val + pwm_deadtime;
+		}
+	} else {
+		OCR0A = 0;
+		OCR0B = 0;
+	}
 
 out:
 	pwm_position = (pwm_position+1) % N_ENTRIES;
